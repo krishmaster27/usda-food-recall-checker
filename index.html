@@ -1,31 +1,60 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <title>Food Recall Checker</title>
-    <link rel="stylesheet" href="css/index.css">
-</head>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>USDA Food Recall Checker</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background: #f4f6f8;
+                padding: 40px;
+            }
+            .card {
+                background: white;
+                padding: 20px;
+                max-width: 500px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            button {
+                margin-top: 15px;
+                padding: 10px 20px;
+                cursor: pointer;
+            }
+            img {
+                max-width: 100%;
+                margin-top: 15px;
+                display: none;
+            }
+            .recalled {
+                color: red;
+                font-weight: bold;
+            }
+            .not-recalled {
+                color: green;
+                font-weight: bold;
+            }
+            ul {
+                margin-top: 10px;
+            }
+        </style>
+    </head>
+    <body>
 
-<body>
-    <h1>USDA Food Recall Checker</h1>
-    <p>Upload a picture of a product and see if it's been recalled.</p>
+        <h1>USDA Food Recall Checker</h1>
+        <p>Upload a food image and see if it has been recalled.</p>
 
-    <form action="" method="post" enctype="multipart/form-data" class="card">
-        <div class="container">
-            <label for="imageUpload">Choose an image to upload:</label>
-            <input type="file" id="imageUpload" name="image" accept="image/*">
-            <input type="submit" value="Check For Recalls!" id = "checkBtn">
+        <div class="card">
+            <input type="file" id="imageUpload" accept="image/*">
+            <br>
+            <button id="checkBtn">Check For Recalls</button>
 
-            
             <img id="imagePreview">
         </div>
-    </form>
 
-    <div id = "result">
-    </div>
-    <p id = "productName">
-       Ham 
-    </p>
+        <div id="result"></div>
 
-    <script src="js/script.js"></script>
-</body>
+        <script src="js/script.js"></script>
+    </body>
 </html>
+

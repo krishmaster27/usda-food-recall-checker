@@ -1,95 +1,128 @@
-//Testing Github  
+document.addEventListener("DOMContentLoaded", () => {
 
-script.js
+  // 🔥 DEMO ONLY — DO NOT SHIP THIS
+  const CLARIFAI_API_KEY = "3322dba4bf694fd99b8065d57fba6494";
+  const MODEL_ID = "food-item-recognition";
+  const MODEL_VERSION = "1d5fd481e0cf4826aa72ec3ff049e044";
 
-document.addEventListener('DOMContentLoaded', () => {
-  const checkBtn = document.getElementById('checkBtn');
-  const productInput = document.getElementById('productName');
-  const resultDiv = document.getElementById('result');
-  var foodDetected = [,];
+  const imageUpload = document.getElementById("imageUpload");
+  const checkBtn = document.getElementById("checkBtn");
+  const resultDiv = document.getElementById("result");
+  const preview = document.getElementById("imagePreview");
 
-  // javascript for AI model will be here
-  // it will return a word
-  // foodDetected = whatever is returned by the AI model
-  // you would access foodDetected[0]
+  imageUpload.addEventListener("change", () => {
+    const file = imageUpload.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    }
+  });
 
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
 
-  checkBtn.addEventListener('click', async () => {
-    const query = productInput.value.trim().toLowerCase();
+  async function detectFood(imageFile) {
+    const base64Image = await toBase64(imageFile);
 
-    if (!query) {
-      resultDiv.textContent = "Please enter a product name or keyword.";
+    const clarifaiUrl =
+      `https://api.clarifai.com/v2/models/${MODEL_ID}/versions/${MODEL_VERSION}/outputs`;
+
+    // 🚨 CORS PROXY
+    const proxyUrl =
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(clarifaiUrl);
+
+    const response = await fetch(proxyUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Key ${CLARIFAI_API_KEY}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        inputs: [
+          {
+            data: {
+              image: { base64: base64Image }
+            }
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Clarifai request failed");
+    }
+
+    const data = await response.json();
+    return data.outputs[0].data.concepts;
+  }
+
+  checkBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    if (!imageUpload.files.length) {
+      resultDiv.textContent = "Please upload an image.";
       return;
     }
 
-    resultDiv.textContent = "Searching for recalls…";
+    resultDiv.innerHTML = "Analyzing image…";
 
     try {
-      // FSIS API requires at least one filter (docs)
-      const baseUrl = "https://www.fsis.usda.gov/fsis/api/recall/v/1?";
-      
-      const params = new URLSearchParams({
-        field_closed_year_id: "All",  // Required for broad query
-        langcode: "English"           // Optional parameter
-      });
+      const concepts = await detectFood(imageUpload.files[0]);
+      const topFood = concepts[0].name;
+      const confidence = (concepts[0].value * 100).toFixed(1);
 
-      const url = baseUrl + params.toString();
+      resultDiv.innerHTML = `
+        <strong>Detected food:</strong> ${topFood}<br>
+        <strong>Confidence:</strong> ${confidence}%<br><br>
+        Searching USDA recalls…
+      `;
 
-      console.log("Request URL:", url);
-
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`FSIS API request failed: ${response.status}`);
-      }
+      const response = await fetch(
+        "https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English"
+      );
 
       const data = await response.json();
 
-      // Search across multiple fields for user query
       const matches = data.filter(item => {
-        const searchableText = [
+        const text = [
           item.field_title,
-          item.field_establishment,
           item.field_product_items,
-          item.field_summary,
-          item.field_labels
-        ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+          item.field_summary
+        ].filter(Boolean).join(" ").toLowerCase();
 
-        return searchableText.includes(query);
+        return text.includes(topFood.toLowerCase());
       });
 
-      // Output
       if (matches.length === 0) {
-        resultDiv.innerHTML =
-          `<span class="not-recalled">No FSIS recalls found for "<strong>${query}</strong>".</span>`;
+        resultDiv.innerHTML += `<p class="not-recalled">No recalls found.</p>`;
       } else {
-        resultDiv.innerHTML =
-          `<span class="recalled">Found ${matches.length} recall(s) for "<strong>${query}</strong>":</span>`;
-
-        const list = document.createElement("ul");
+        resultDiv.innerHTML += `<p class="recalled">⚠️ ${matches.length} recall(s) found:</p>`;
+        const ul = document.createElement("ul");
 
         matches.forEach(rec => {
           const li = document.createElement("li");
           li.innerHTML = `
             <strong>${rec.field_title}</strong><br>
-            <strong>Recall #:</strong> ${rec.field_recall_number || "N/A"}<br>
             <strong>Date:</strong> ${rec.field_recall_date || "N/A"}<br>
             <strong>Reason:</strong> ${rec.field_recall_reason || "N/A"}<br>
-            <strong>Products:</strong> ${rec.field_product_items || "N/A"}<br>
-            <strong>Classification:</strong> ${rec.field_recall_classification || "N/A"}
+            <strong>Products:</strong> ${rec.field_product_items || "N/A"}
           `;
-          list.appendChild(li);
+          ul.appendChild(li);
         });
 
-        resultDiv.appendChild(list);
+        resultDiv.appendChild(ul);
       }
 
     } catch (err) {
-      console.error("Error fetching FSIS API:", err);
-      resultDiv.textContent = `Error: ${err.message}`;
+      console.error(err);
+      resultDiv.textContent =
+        "Demo proxy failed (this is common). Refresh and try again.";
     }
   });
 });
