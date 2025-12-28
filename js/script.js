@@ -1,16 +1,18 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const imageUpload = document.getElementById("imageUpload");
-  const checkBtn = document.getElementById("checkBtn");
-  const resultDiv = document.getElementById("result");
-  const preview = document.getElementById("imagePreview");
+//  
 
-  imageUpload.addEventListener("change", () => {
-    const file = imageUpload.files[0];
-    if (file) {
-      preview.src = URL.createObjectURL(file);
-      preview.style.display = "block";
-    }
-  });
+script.js
+
+document.addEventListener('DOMContentLoaded', () => {
+  const checkBtn = document.getElementById('checkBtn');
+  const productInput = document.getElementById('productName');
+  const resultDiv = document.getElementById('result');
+  var foodDetected = [,];
+
+  // javascript for AI model will be here
+  // it will return a word
+  // foodDetected = whatever is returned by the AI model
+  // you would access foodDetected[0]
+
 
   checkBtn.addEventListener("click", async (e) => {
     e.preventDefault();

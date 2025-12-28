@@ -7,8 +7,8 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Open index.html",
-            "file": "/Users/krishtianjain/Desktop/Science Fair AI Project/index.html"
+            "name": "Open sign-up.html",
+            "file": "/Users/krishtianjain/Desktop/Science Fair AI Project/sign-up.html"
         }
     ]
 }
