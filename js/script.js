@@ -26,10 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
       formData.append("image", imageUpload.files[0]);
 
       // Call backend
-      const response = await fetch("/detect-food", {
-        method: "POST",
-        body: formData
-      });
+      const response = await fetch("/detect-food", { method: "POST", body: formData });
 
       if (!response.ok) throw new Error("Failed to detect food");
 
@@ -40,15 +37,16 @@ document.addEventListener("DOMContentLoaded", () => {
       resultDiv.innerHTML = `<strong>Detected food:</strong> ${topFood} (${confidence}%)<br>Searching USDA recalls…`;
 
       // USDA recall search
-      const recallResponse = await fetch("https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English");
+      const recallResponse = await fetch(
+        "https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English"
+      );
+      
       const recallData = await recallResponse.json();
+      const recalls = recallData.recall || [];
 
-      const matches = recallData.filter(item => {
-        const text = [
-          item.field_title,
-          item.field_product_items,
-          item.field_summary
-        ].filter(Boolean).join(" ").toLowerCase();
+      const matches = recalls.filter(item => {
+        const text = [item.field_title, item.field_product_items, item.field_summary]
+          .filter(Boolean).join(" ").toLowerCase();
         return text.includes(topFood.toLowerCase());
       });
 
