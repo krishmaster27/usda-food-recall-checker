@@ -1,0 +1,56 @@
+/* Page background */
+body {
+  font-family: Arial, sans-serif;
+  background: #f0f2f5;
+  margin: 0;
+  padding: 0;
+}
+
+/* Profile card */
+.container {
+  max-width: 600px;
+  background: white;
+  padding: 30px;
+  margin: 80px auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Title */
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+/* Profile info rows */
+.container p {
+  font-size: 16px;
+  padding: 12px 15px;
+  margin: 12px 0;
+  background: #fafafa;
+  border-radius: 6px;
+  border-left: 4px solid #0074D9;
+}
+
+/* Emphasize labels */
+.container p strong {
+  display: inline-block;
+  width: 140px;
+}
+
+/* Logout button */
+button {
+  width: 100%;
+  margin-top: 30px;
+  padding: 14px;
+  font-size: 18px;
+  background: #b30000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #8f0000;
+}

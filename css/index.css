@@ -1,7 +1,6 @@
-
 body {
   font-family: Arial, sans-serif;
-  background: #f5f5f5;
+  background: #f4f6f8;
   margin: 0;
   padding: 0;
 }
@@ -9,48 +8,76 @@ body {
 .container {
   max-width: 700px;
   background: white;
-  padding: 25px;
+  padding: 30px;
   margin: 60px auto;
   border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
 }
 
 h1 {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
+  color: #0074D9;
+}
+
+p {
+  text-align: center;
+  font-size: 16px;
+  color: #333;
+  margin-bottom: 25px;
 }
 
 label {
   font-weight: bold;
+  display: block;
+  margin-bottom: 6px;
 }
 
 input {
   width: 100%;
-  padding: 12px;
-  margin: 10px 0 20px 0;
+  padding: 14px;
+  margin-bottom: 20px;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 8px;
   font-size: 16px;
+  transition: border 0.2s;
+}
+
+input:focus {
+  border-color: #0074D9;
+  outline: none;
 }
 
 button {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   font-size: 18px;
   background: #0074D9;
   color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
 }
 
 button:hover {
   background: #005fa3;
+  transform: translateY(-2px);
+}
+
+#imagePreview {
+  display: block;
+  max-width: 100%;
+  margin: 20px auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 #result {
-  margin-top: 20px;
+  margin-top: 25px;
   line-height: 1.6;
+  font-size: 16px;
+  text-align: center;
 }
 
 .recalled {
@@ -64,15 +91,50 @@ button:hover {
 }
 
 ul {
-  margin-top: 15px;
-  padding-left: 20px;
+  margin-top: 20px;
+  padding-left: 0;
 }
 
 li {
   margin-bottom: 20px;
-  padding: 12px;
-  background: #fafafa;
+  padding: 14px 20px;
+  background: #ffffff;
   border-left: 4px solid #0074D9;
-  border-radius: 6px;
+  border-radius: 8px;
   list-style: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.12);
+}
+
+li .buttons button {
+  margin-left: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 6px;
+}
+
+li .buttons .show-btn {
+  background: #0074D9;
+  color: white;
+}
+
+li .buttons .show-btn:hover {
+  background: #005fa3;
+}
+
+li .buttons .delete-btn {
+  background: #b30000;
+  color: white;
+}
+
+li .buttons .delete-btn:hover {
+  background: #8f0000;
 }

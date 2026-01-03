@@ -1,18 +1,17 @@
-//  
+document.addEventListener("DOMContentLoaded", () => {
+  const imageUpload = document.getElementById("imageUpload");
+  const checkBtn = document.getElementById("checkBtn");
+  const resultDiv = document.getElementById("result");
+  const preview = document.getElementById("imagePreview");
 
-script.js
-
-document.addEventListener('DOMContentLoaded', () => {
-  const checkBtn = document.getElementById('checkBtn');
-  const productInput = document.getElementById('productName');
-  const resultDiv = document.getElementById('result');
-  var foodDetected = [,];
-
-  // javascript for AI model will be here
-  // it will return a word
-  // foodDetected = whatever is returned by the AI model
-  // you would access foodDetected[0]
-
+  // Show image preview
+  imageUpload.addEventListener("change", () => {
+    const file = imageUpload.files[0];
+    if (file) {
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = "block";
+    }
+  });
 
   checkBtn.addEventListener("click", async (e) => {
     e.preventDefault();
@@ -25,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultDiv.textContent = "Analyzing image…";
 
     try {
-      /* ---------- SEND IMAGE ---------- */
+      // ---------- SEND IMAGE TO CLARIFAI ----------
       const formData = new FormData();
       formData.append("image", imageUpload.files[0]);
 
@@ -34,9 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
         body: formData
       });
 
-      if (!detectResponse.ok) {
-        throw new Error("Food detection failed");
-      }
+      if (!detectResponse.ok) throw new Error("Food detection failed");
 
       const detectData = await detectResponse.json();
       const food = detectData.food;
@@ -47,7 +44,21 @@ document.addEventListener('DOMContentLoaded', () => {
         Searching USDA recalls…
       `;
 
-      /* ---------- CHECK RECALLS ---------- */
+      // ---------- SAVE PRODUCT FOR LOGGED-IN USER ----------
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (user) {
+        await fetch("/save-product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: user.phone, product: food })
+        });
+
+        // Optional: Dispatch event so Saved Products page updates immediately
+        const event = new CustomEvent("addProduct", { detail: { product: food } });
+        window.dispatchEvent(event);
+      }
+
+      // ---------- CHECK USDA RECALLS ----------
       const recallResponse = await fetch(
         `/check-recalls?food=${encodeURIComponent(food)}`
       );
@@ -55,22 +66,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const recallData = await recallResponse.json();
 
       if (recallData.warning) {
-        resultDiv.innerHTML += `
-          <p class="not-recalled">⚠️ ${recallData.message}</p>
-        `;
+        resultDiv.innerHTML += `<p class="not-recalled">⚠️ ${recallData.message}</p>`;
         return;
       }
 
       const matches = recallData.recalls;
 
       if (matches.length === 0) {
-        resultDiv.innerHTML += `
-          <p class="not-recalled">No recalls found.</p>
-        `;
+        resultDiv.innerHTML += `<p class="not-recalled">No recalls found.</p>`;
       } else {
-        resultDiv.innerHTML += `
-          <p class="recalled">⚠️ ${matches.length} recall(s) found:</p>
-        `;
+        resultDiv.innerHTML += `<p class="recalled">⚠️ ${matches.length} recall(s) found:</p>`;
 
         const ul = document.createElement("ul");
 
@@ -90,8 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } catch (err) {
       console.error(err);
-      resultDiv.textContent =
-        "An unexpected error occurred. Please try again.";
+      resultDiv.textContent = "An unexpected error occurred. Please try again.";
     }
   });
 });

@@ -3,30 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <title>USDA Food Recall Checker</title>
+  <link rel="stylesheet" href="sidebar.css">
   <style>
-    body { font-family: Arial; padding:40px; background:#f4f6f8; }
-    .card { background:white; padding:20px; border-radius:8px; max-width:500px; box-shadow:0 2px 10px rgba(0,0,0,0.1);}
-    button { margin-top:15px; padding:10px 20px; cursor:pointer;}
-    img { max-width:100%; margin-top:15px; display:none;}
-    .recalled {color:red; font-weight:bold;}
-    .not-recalled {color:green; font-weight:bold;}
-    ul {margin-top:10px;}
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      height: 100%;
+    }
+
+    /* Center main content */
+    .main-content {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 40px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+
+    .card {
+      display: inline-block;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 500px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    button {
+      margin-top: 15px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #0074D9;
+      color: white;
+    }
+
+    button:hover {
+      background-color: #005fa3;
+    }
+
+    img {
+      max-width: 100%;
+      margin-top: 15px;
+      display: none;
+    }
+
+    .recalled {
+      color: red;
+      font-weight: bold;
+    }
+
+    .not-recalled {
+      color: green;
+      font-weight: bold;
+    }
+
+    /* Sidebar toggle button */
+    .sidebar-toggle {
+      position: fixed;
+      top: -8px;
+      left: -9px;
+      font-size: 24px;
+      background: #0074D9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      z-index: 1100;
+    }
   </style>
 </head>
 <body>
 
-<h1>USDA Food Recall Checker</h1>
-<p>Upload a food image and see if it has been recalled.</p>
-
-<div class="card">
-  <input type="file" id="imageUpload" name="image" accept="image/*">
-  <br>
-  <button id="checkBtn">Check For Recalls</button>
-  <img id="imagePreview">
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html" class="active">Home</a>
+    <a href="sign-up.html">Sign Up</a>
+    <a href="sign-in.html">Sign In</a>
+    <a href="user-profile.html">Profile</a>
+    <a href="saved-products.html">Saved Products</a>
+    <a href="expiration-reminders.html">Expiration Reminders</a>
 </div>
 
-<div id="result"></div>
+<!-- Sidebar toggle button -->
+<button class="sidebar-toggle">&#9776;</button>
+
+<!-- Main content -->
+<div class="main-content">
+  <div class="card">
+    <h1>USDA Food Recall Checker</h1>
+    <p>Upload a food image and see if it has been recalled.</p>
+    <input type="file" id="imageUpload" name="image" accept="image/*"><br>
+    <button id="checkBtn">Check For Recalls</button>
+    <img id="imagePreview">
+    <div id="result"></div>
+  </div>
+</div>
 
 <script src="js/script.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+  const sidebar = document.querySelector('.sidebar');
+  const content = document.querySelector('.main-content');
+  const toggleBtn = document.querySelector('.sidebar-toggle');
+
+  // Sidebar toggle functionality
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
+    content.classList.toggle('shifted');
+  });
+
+  // Slide sidebar in on page load
+  setTimeout(() => {
+    sidebar.classList.add('active');
+    content.classList.add('shifted');
+  }, 100);
+});
+</script>
+
 </body>
-</html> 
+</html>

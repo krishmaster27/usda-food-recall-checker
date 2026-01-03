@@ -1,53 +1,80 @@
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+  background: red;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-.signup-container {
-    background: white;
-    padding: 30px;
-    width: 320px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+.container {
+  max-width: 600px;
+  background: white;
+  padding: 30px;
+  margin: 80px auto;
+  border-radius: 12px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 h1 {
-    text-align: center;
-    margin-bottom: 20px;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
-label {
-    display: block;
-    margin-top: 12px;
-    font-weight: bold;
+/* Horizontal rows like profile page */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafafa;
+  padding: 14px 16px;
+  margin: 14px 0;
+  border-radius: 6px;
+  border-left: 4px solid #0074D9;
 }
 
-input {
-    width: 100%;
-    padding: 8px;
-    margin-top: 5px;
-    box-sizing: border-box;
+/* Left label */
+.row span {
+  font-weight: bold;
+  width: 170px;
 }
 
+/* Right input */
+.row input {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+/* Button */
 button {
-    width: 100%;
-    padding: 10px;
-    margin-top: 20px;
-    font-size: 16px;
-    cursor: pointer;
+  width: 100%;
+  margin-top: 30px;
+  padding: 14px;
+  font-size: 18px;
+  background: #0074D9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
-.signin-text {
-    text-align: center;
-    margin-top: 15px;
+button:hover {
+  background: #005fa3;
 }
 
-.signin-text a {
-    text-decoration: none;
-    font-weight: bold;
+/* Bottom text */
+.bottom-text {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.bottom-text a {
+  font-weight: bold;
+  color: #0074D9;
+  text-decoration: none;
+}
+
+.bottom-text a:hover {
+  text-decoration: underline;
 }

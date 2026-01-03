@@ -1,19 +1,184 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>User Profile</title>
+  <meta charset="UTF-8">
+  <title>User Profile</title>
+
+  <!-- Sidebar styles -->
+  <link rel="stylesheet" href="sidebar.css">
+
+  <!-- Page styles -->
+  <link rel="stylesheet" href="user-profile.css">
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+    }
+
+    /* Waffle button */
+    .sidebar-toggle {
+      position: fixed;
+      top: 7px;
+      left: -9px; /* move it away from sidebar */
+      font-size: 24px;
+      background: #0074D9;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      z-index: 1200;
+    }
+
+    /* Center page content */
+    .main-content {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+      margin-left: 0; /* will shift when sidebar opens */
+      transition: margin-left 0.3s ease;
+    }
+
+    .main-content.shifted {
+      margin-left: 180px; /* same as sidebar width */
+    }
+
+    .container {
+      width: 100%;
+      max-width: 400px;
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .profile-info p {
+      background: #fafafa;
+      padding: 10px 12px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border-left: 4px solid #0074D9;
+      font-size: 16px;
+    }
+
+    .profile-info strong {
+      display: inline-block;
+      width: 130px;
+    }
+
+    .change-info-btn {
+      width: 100%;
+      margin-top: 10px;
+      padding: 12px;
+      font-size: 16px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .change-info-btn:hover {
+      background: #0056b3;
+    }
+
+    #forgotPassword {
+      color: #007bff;
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    #forgotPassword:hover {
+      text-decoration: underline;
+    }
+
+    .logout-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 12px;
+      font-size: 18px;
+      background: #b30000;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover {
+      background: #8f0000;
+    }
+  </style>
 </head>
 
 <body>
-    <div class="container">
-        <h1>User Profile</h1>
 
-        <div>
-            <p><strong>Phone Number:</strong> 123-456-7890</p>
-            <p><strong>Password:</strong> ********</p>
-        </div>
+<!-- Waffle Button -->
+<button class="sidebar-toggle" id="sidebarToggle">&#9776;</button>
 
-        <button id="logoutBtn">Log Out</button>
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="sign-up.html">Sign Up</a>
+    <a href="sign-in.html">Sign In</a>
+    <a href="user-profile.html" class="active">Profile</a>
+    <a href="saved-products.html">Saved Products</a>
+    <a href="expiration-reminders.html">Expiration Reminders</a>
+</div>
+
+<!-- Page content -->
+<div class="main-content" id="mainContent">
+  <div class="container">
+    <h1>User Profile</h1>
+
+    <div class="profile-info">
+      <p><strong>Phone Number:</strong> <span id="phoneDisplay">123-456-7890</span></p>
+      <p><strong>Password:</strong> <span id="passwordDisplay">********</span></p>
     </div>
+
+    <!-- Change Info & Forgot Password -->
+    <button class="change-info-btn">Change Info</button>
+    <p style="text-align:center; margin-top: 10px;">
+      <a href="#" id="forgotPassword">Forgot Password?</a>
+    </p>
+
+    <button class="logout-btn">Log Out</button>
+  </div>
+</div>
+
+<!-- Sidebar JS -->
+<script>
+const sidebar = document.querySelector('.sidebar');
+const content = document.getElementById('mainContent');
+const toggleBtn = document.getElementById('sidebarToggle');
+
+// Toggle sidebar and shift content
+toggleBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('active');
+  content.classList.toggle('shifted');
+});
+
+// Open sidebar and shift content on page load
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    sidebar.classList.add('active');
+    content.classList.add('shifted');
+  }, 100);
+});
+</script>
+
+<script src="user-profile.js"></script>
+
 </body>
 </html>

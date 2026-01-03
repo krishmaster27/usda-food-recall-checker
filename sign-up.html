@@ -1,11 +1,122 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="sign-up.css">
+    <style>
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+        }
 
+        /* Center main content */
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            margin-left: 0;
+            transition: margin-left 0.3s ease;
+        }
+
+        .main-content.shifted {
+            margin-left: 180px; /* match sidebar width */
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+        }
+
+        form input {
+            width: 100%;
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        form button {
+            width: 100%;
+            margin-top: 20px;
+            padding: 12px;
+            font-size: 18px;
+            background: #0074D9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background: #005fa3;
+        }
+
+        .signin-text {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        /* Hamburger / Waffle button */
+        .sidebar-toggle {
+            position: fixed;
+            top: 7px;
+            left: -9px;
+            font-size: 24px;
+            background: #0074D9;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 10px 14px;
+            cursor: pointer;
+            z-index: 1100;
+            transition: background 0.2s ease;
+        }
+
+        .sidebar-toggle:hover {
+            background: #005fa3;
+        }
+    </style>
+</head>
 <body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>Menu</h2>
+    <a href="index.html">Home</a>
+    <a href="sign-up.html" class="active">Sign Up</a>
+    <a href="sign-in.html">Sign In</a>
+    <a href="user-profile.html">Profile</a>
+    <a href="saved-products.html">Saved Products</a>
+    <a href="expiration-reminders.html">Expiration Reminders</a>
+</div>
+
+
+<!-- Main content -->
+<div class="main-content">
     <div class="container">
         <h1>Sign Up</h1>
 
@@ -29,6 +140,32 @@
             Already a member? <a href="sign-in.html">Sign In</a>
         </div>
     </div>
+</div>
+
+<!-- Sidebar JS -->
+<script>
+window.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.querySelector('.sidebar');
+    const content = document.querySelector('.main-content');
+
+    // Create hamburger button
+    const toggleBtn = document.createElement('button');
+    toggleBtn.className = 'sidebar-toggle';
+    toggleBtn.innerHTML = '&#9776;';
+    document.body.appendChild(toggleBtn);
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('active');
+        content.classList.toggle('shifted');
+    });
+
+    // Open sidebar by default
+    setTimeout(() => {
+        sidebar.classList.add('active');
+        content.classList.add('shifted');
+    }, 100);
+});
+</script>
+<script src="sign-up.js"></script>
 </body>
 </html>
-

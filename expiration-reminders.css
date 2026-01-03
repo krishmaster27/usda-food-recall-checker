@@ -1,0 +1,79 @@
+/* expiration-reminders.css */
+
+/* Reset & page font */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+/* Sidebar toggle / waffle button */
+.sidebar-toggle {
+  position: fixed;
+  top: -8px; /* same as index.html */
+  left: -9px;
+  font-size: 24px;
+  background-color: #0074D9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 14px;
+  cursor: pointer;
+  z-index: 1100;
+  width: auto;
+  display: block;
+}
+
+/* Main content container */
+.main-content {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  margin-left: 0;
+  transition: margin-left 0.3s ease;
+}
+
+.main-content.shifted {
+  margin-left: 180px;
+}
+
+/* Inner page container */
+.container {
+  width: 100%;
+  max-width: 500px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Inputs, selects, buttons */
+input, select, button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+/* Buttons hover effect */
+button {
+  background-color: #0074D9;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #005fa3;
+}
+
+/* Reminder list */
+ul {
+  padding-left: 20px;
+}

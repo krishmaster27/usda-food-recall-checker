@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expiration Reminders</title>
+  <link rel="stylesheet" href="sidebar.css">
+  <link rel="stylesheet" href="expiration-reminders.css">
+</head>
+<body>
+
+<!-- Sidebar toggle -->
+<button class="sidebar-toggle">&#9776;</button>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Menu</h2>
+  <a href="index.html">Home</a>
+  <a href="sign-up.html">Sign Up</a>
+  <a href="sign-in.html">Sign In</a>
+  <a href="user-profile.html">Profile</a>
+  <a href="saved-products.html">Saved Products</a>
+  <a href="expiration-reminders.html" class="active">Expiration Reminders</a>
+</div>
+
+<!-- Main content -->
+<div class="main-content" id="mainContent">
+  <div class="container">
+    <h2>Expiration Reminders</h2>
+
+    <label>Product Name</label>
+    <input type="text" id="product-name" placeholder="e.g., Milk">
+
+    <label>Expiration Date</label>
+    <input type="date" id="expiration-date">
+
+    <label>Remind Me</label>
+    <select id="reminder-days">
+      <option value="1">1 day before</option>
+      <option value="2">2 days before</option>
+      <option value="7">1 week before</option>
+    </select>
+
+    <button id="add-reminder-btn">Add Reminder</button>
+
+    <h3>Your Reminders:</h3>
+    <ul id="reminders-list"></ul>
+  </div>
+</div>
+
+<script src="expiration-reminders.js"></script>
+<script>
+  // Sidebar toggle
+  const sidebar = document.querySelector('.sidebar');
+  const content = document.getElementById('mainContent');
+  const toggleBtn = document.querySelector('.sidebar-toggle');
+
+  toggleBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('active');
+    content.classList.toggle('shifted');
+  });
+
+  // Slide sidebar in on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      sidebar.classList.add('active');
+      content.classList.add('shifted');
+    }, 100);
+  });
+</script>
+</body>
+</html>

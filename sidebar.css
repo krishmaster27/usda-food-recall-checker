@@ -1,0 +1,79 @@
+/* Sidebar container */
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: -180px; /* start hidden offscreen */
+  width: 180px;
+  height: 100%;
+  background-color: #0074D9;
+  color: white;
+  padding: 20px;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+  font-family: Arial, sans-serif;
+  z-index: 1000;
+  transition: left 0.3s ease; /* smooth slide */
+}
+
+/* Sidebar active (visible) */
+.sidebar.active {
+  left: 0;
+}
+
+/* Sidebar header */
+.sidebar h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-align: center;
+}
+
+/* Sidebar links */
+.sidebar a {
+  display: block;
+  color: white;
+  text-decoration: none;
+  padding: 12px 10px;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  font-size: 16px;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover highlight */
+.sidebar a:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Active/current page */
+.sidebar a.active {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Main content area */
+.main-content {
+  margin-left: 0; /* start without offset */
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  transition: margin-left 0.3s ease; /* smooth slide */
+}
+
+/* Shift main content when sidebar is active */
+.main-content.shifted {
+  margin-left: 180px;
+}
+
+/* Optional: smaller screens */
+@media (max-width: 600px) {
+  .sidebar {
+    width: 140px;
+    left: -140px;
+  }
+
+  .sidebar.active {
+    left: 0;
+  }
+
+  .main-content.shifted {
+    margin-left: 140px;
+  }
+}
