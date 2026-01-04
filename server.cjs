@@ -26,7 +26,7 @@ const MODEL_VERSION = "1d5fd481e0cf4826aa72ec3ff049e044";
 // ---------- TWILIO CONFIG ----------
 const TWILIO_ACCOUNT_SID = "ACc8e2e10c293ca9f29c9475aeb47f2bf8";
 const TWILIO_AUTH_TOKEN = "fe4ec513924d31307945305c31bdb5fd";
-const TWILIO_PHONE_NUMBER = "+1234567890"; // your Twilio number
+const TWILIO_PHONE_NUMBER = "+1234567890";
 const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 
 // ---------- MULTER ----------
@@ -40,21 +40,6 @@ function loadUsers() {
 
 function saveUsers(users) {
   fs.writeFileSync(usersPath, JSON.stringify(users, null, 2));
-}
-
-function saveDetectedProduct(phone, product) {
-  if (!phone || !product) return;
-  let reminders = [];
-  if (fs.existsSync(remindersPath)) {
-    reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
-  }
-  const exists = reminders.some(
-    r => r.phone === phone && r.product.toLowerCase() === product.toLowerCase()
-  );
-  if (!exists) {
-    reminders.push({ phone, product, expiresOn: null, remindBeforeDays: 0 });
-    fs.writeFileSync(remindersPath, JSON.stringify(reminders, null, 2));
-  }
 }
 
 // ---------- TWILIO SMS FUNCTION ----------
@@ -81,8 +66,9 @@ app.post("/sign-up", (req, res) => {
   if (!phone || !password) return res.status(400).json({ success: false });
 
   let users = loadUsers();
-  const exists = users.some(u => u.phone === phone);
-  if (exists) return res.json({ success: false, message: "User exists" });
+  if (users.some(u => u.phone === phone)) {
+    return res.json({ success: false, message: "User exists" });
+  }
 
   const newUser = { phone, password };
   users.push(newUser);
@@ -108,15 +94,19 @@ app.post("/sign-in", (req, res) => {
 // =====================
 
 // HOME
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/", (req, res) =>
+  res.sendFile(path.join(__dirname, "index.html"))
+);
 
-// CLARIFAI FOOD DETECTION
+// ---------- CLARIFAI FOOD DETECTION (FIXED) ----------
 app.post("/detect-food", upload.single("image"), async (req, res) => {
   try {
-    const { phone } = req.body;
-    if (!req.file) return res.status(400).json({ error: "No image uploaded" });
+    if (!req.file) {
+      return res.status(400).json({ error: "No image uploaded" });
+    }
 
     const base64Image = req.file.buffer.toString("base64");
+
     const response = await fetch(
       `https://api.clarifai.com/v2/models/${MODEL_ID}/versions/${MODEL_VERSION}/outputs`,
       {
@@ -126,8 +116,17 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          user_app_id: { user_id: USER_ID, app_id: APP_ID },
-          inputs: [{ data: { image: { base64: base64Image } } }]
+          user_app_id: {
+            user_id: USER_ID,
+            app_id: APP_ID
+          },
+          inputs: [
+            {
+              data: {
+                image: { base64: base64Image }
+              }
+            }
+          ]
         })
       }
     );
@@ -140,33 +139,35 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
 
     const data = await response.json();
     const concepts = data.outputs?.[0]?.data?.concepts;
-    if (!concepts || concepts.length === 0)
+
+    if (!concepts || concepts.length === 0) {
       return res.status(400).json({ error: "No food detected" });
+    }
 
-    const detectedFood = concepts[0].name;
-    saveDetectedProduct(phone, detectedFood);
-
-    res.json({ food: detectedFood, confidence: concepts[0].value });
+    res.json({
+      food: concepts[0].name,
+      confidence: concepts[0].value
+    });
   } catch (err) {
     console.error("Detect food error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
 
-// GET REMINDERS
+// =====================
+// ⏰ REMINDERS
+// =====================
+
 app.get("/get-reminders", (req, res) => {
   const phone = req.query.phone;
   if (!phone) return res.json({ reminders: [] });
 
-  let reminders = [];
-  if (fs.existsSync(remindersPath)) {
-    reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
-  }
+  if (!fs.existsSync(remindersPath)) return res.json({ reminders: [] });
 
+  const reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
   res.json({ reminders: reminders.filter(r => r.phone === phone) });
 });
 
-// ADD REMINDER + SMS
 app.post("/add-reminder", async (req, res) => {
   const { phone, product, expiresOn, remindBeforeDays } = req.body;
   if (!phone || !product || !expiresOn) return res.json({ success: false });
@@ -176,23 +177,19 @@ app.post("/add-reminder", async (req, res) => {
     reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
   }
 
-  const newReminder = {
+  reminders.push({
     phone,
     product: product.trim(),
     expiresOn,
     remindBeforeDays: parseInt(remindBeforeDays) || 0
-  };
+  });
 
-  reminders.push(newReminder);
   fs.writeFileSync(remindersPath, JSON.stringify(reminders, null, 2));
-
-  // Send SMS reminder immediately (or schedule with cron later)
   await sendExpirationSMS(phone, product, expiresOn);
 
   res.json({ success: true });
 });
 
-// DELETE REMINDER
 app.post("/delete-reminder", (req, res) => {
   const { phone, product, expiresOn } = req.body;
   if (!phone || !product || !expiresOn) return res.json({ success: false });
@@ -210,45 +207,55 @@ app.post("/delete-reminder", (req, res) => {
   res.json({ success: reminders.length < before });
 });
 
-// SAVED PRODUCTS WITH RECALLS
-app.get("/saved-products-with-recalls", (req, res) => {
-  const phone = req.query.phone;
-  if (!phone) return res.status(400).json({ products: [] });
-
-  let reminders = [];
-  if (fs.existsSync(remindersPath)) {
-    reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
+// ---------- USDA RECALL CHECK ----------
+app.get("/check-recalls", async (req, res) => {
+  const food = req.query.food;
+  if (!food) {
+    return res.status(400).json({ error: "Missing food query" });
   }
 
-  const userProducts = reminders.filter(r => r.phone === phone);
+  const USDA_URL =
+    "https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English";
 
-  const mockRecalls = [
-    {
-      field_title: "Recall of Apple Slices Due to Listeria",
-      field_recall_date: "2026-01-01",
-      field_recall_reason: "Possible Listeria contamination",
-      field_product_items: "Apple Slices, pre-packaged",
-      field_summary: "Apples packaged at XYZ facility may be contaminated."
-    },
-    {
-      field_title: "Ham Recall for Salmonella Risk",
-      field_recall_date: "2026-01-02",
-      field_recall_reason: "Salmonella contamination",
-      field_product_items: "Sliced Ham, 16oz packs",
-      field_summary: "Ham products from ABC company may contain Salmonella."
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const response = await fetch(USDA_URL, { signal: controller.signal });
+    clearTimeout(timeout);
+
+    if (!response.ok) {
+      throw new Error(`USDA HTTP ${response.status}`);
     }
-  ];
 
-  const productsWithRecalls = userProducts.map(p => {
-    const recalls = mockRecalls.filter(item =>
-      `${item.field_title} ${item.field_product_items} ${item.field_summary}`
-        .toLowerCase()
-        .includes(p.product.toLowerCase())
-    );
-    return { ...p, recalls };
-  });
+    const data = await response.json();
+    const recalls = data.recall || [];
 
-  res.json({ products: productsWithRecalls });
+    const matches = recalls.filter(item => {
+      const text = [
+        item.field_title,
+        item.field_product_items,
+        item.field_summary
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return text.includes(food.toLowerCase());
+    });
+
+    res.json({ recalls: matches });
+  } catch (err) {
+    clearTimeout(timeout);
+    console.error("USDA fetch failed:", err.message);
+
+    res.json({
+      warning: true,
+      message:
+        "USDA recall database is temporarily unavailable. Please try again later.",
+      recalls: []
+    });
+  }
 });
 
 // =====================
@@ -261,4 +268,6 @@ app.get("/:page", (req, res) => {
 });
 
 // ---------- START SERVER ----------
-app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`✅ Server running at http://localhost:${PORT}`)
+);
