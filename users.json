@@ -1,6 +1,17 @@
 [
   {
     "phone": "470-641-1796",
-    "password": "namasteishan2"
+    "password": "namasteishan2",
+    "savedProducts": [
+      "beef",
+      "tomato",
+      "chocolate",
+      "corn",
+      "sandwich",
+      "ham",
+      "apple",
+      "candy",
+      "rice"
+    ]
   }
 ]

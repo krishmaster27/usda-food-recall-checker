@@ -1,68 +1,94 @@
 window.addEventListener("DOMContentLoaded", () => {
+  // 1. SELECT ALL ELEMENTS
   const phoneDisplay = document.getElementById("phoneDisplay");
   const passwordDisplay = document.getElementById("passwordDisplay");
   const logoutBtn = document.querySelector(".logout-btn");
   const changeInfoBtn = document.querySelector(".change-info-btn");
   const forgotPasswordLink = document.getElementById("forgotPassword");
 
-  // Get logged-in user from localStorage
-  let user = JSON.parse(localStorage.getItem("loggedInUser"));
-
-  if (!user) {
-    // Redirect to sign-in if no user
-    window.location.href = "sign-in.html";
-    return;
+  // 2. ATTACH LISTENERS FIRST (Ensures buttons work regardless of data)
+  
+  // Logout Logic
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      console.log("Logging out...");
+      localStorage.removeItem("loggedInUser");
+      window.location.href = "sign-in.html";
+    });
   }
 
-  // Display user info
-  phoneDisplay.textContent = user.phone;
-  passwordDisplay.textContent = "*".repeat(user.password.length);
+  // 3. RETRIEVE USER DATA
+  let user = JSON.parse(localStorage.getItem("loggedInUser"));
 
-  // Logout button
-  logoutBtn.addEventListener("click", () => {
-    localStorage.removeItem("loggedInUser");
+  // 4. DATA VALIDATION (If no user, redirect, but listeners are already alive)
+  if (!user) {
+    console.error("No logged-in user found in localStorage.");
     window.location.href = "sign-in.html";
-  });
+    return; // Exit here if no user, but the listeners above are already bound
+  }
 
-  // Change Info button
-  changeInfoBtn.addEventListener("click", () => {
-    const currentPassword = prompt("Enter your current password to change info:");
-    if (!currentPassword) return;
+  // 5. DISPLAY USER INFO
+  if (phoneDisplay) phoneDisplay.textContent = user.phone;
+  if (passwordDisplay) passwordDisplay.textContent = "*".repeat(user.password.length);
 
-    if (currentPassword !== user.password) {
-      alert("Incorrect password. Cannot change info.");
-      return;
-    }
+  // --- CHANGE INFO BUTTON ---
+  if (changeInfoBtn) {
+    changeInfoBtn.addEventListener("click", async () => {
+      const currentPassword = prompt("Enter your current password to change info:");
+      
+      if (!currentPassword || currentPassword !== user.password) {
+        alert("Incorrect password. Cannot change info.");
+        return;
+      }
 
-    const newPhone = prompt("Enter new phone number:", user.phone) || user.phone;
-    const newPassword = prompt("Enter new password:", user.password) || user.password;
+      const newPhone = prompt("Enter new phone number:", user.phone) || user.phone;
+      const newPassword = prompt("Enter new password:", user.password) || user.password;
 
-    // Update user locally
-    user.phone = newPhone;
-    user.password = newPassword;
-    localStorage.setItem("loggedInUser", JSON.stringify(user));
+      // Update locally
+      user.phone = newPhone;
+      user.password = newPassword;
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
 
-    // Update display
-    phoneDisplay.textContent = user.phone;
-    passwordDisplay.textContent = "*".repeat(user.password.length);
+      // Refresh UI
+      if (phoneDisplay) phoneDisplay.textContent = user.phone;
+      if (passwordDisplay) passwordDisplay.textContent = "*".repeat(user.password.length);
 
-    // Also update in users.json on server
-    fetch("/update-user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user)
-    }).then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          alert("✅ Your information has been updated!");
+      // Attempt server update
+      try {
+        const res = await fetch("/update-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(user)
+        });
+        if (res.ok) alert("✅ Information updated on server!");
+        else alert("✅ Saved locally (Server sync failed).");
+      } catch (err) {
+        alert("✅ Information updated locally!");
+      }
+    });
+  }
+
+  // --- FORGOT PASSWORD ---
+  if (forgotPasswordLink) {
+    forgotPasswordLink.addEventListener("click", (e) => {
+      e.preventDefault();
+
+      const phoneInput = prompt("Enter your phone number:");
+      if (!phoneInput) return;
+
+      // For this session-based prototype, we verify against the logged-in phone
+      if (phoneInput === user.phone) {
+        const newPass = prompt("Enter new password:");
+        if (newPass) {
+          user.password = newPass;
+          localStorage.setItem("loggedInUser", JSON.stringify(user));
+          if (passwordDisplay) passwordDisplay.textContent = "*".repeat(user.password.length);
+          alert("✅ Password reset successfully!");
         }
-      }).catch(() => alert("✅ Your information has been updated!"));
-  });
-
-  // Forgot Password
-  forgotPasswordLink.addEventListener("click", (e) => {
-    e.preventDefault();
-    // Simulate sending SMS
-    alert(`A password reset link has been sent to ${user.phone}. (Simulation only)`);
-  });
+      } else {
+        alert("Phone number does not match current session.");
+      }
+    });
+  }
 });

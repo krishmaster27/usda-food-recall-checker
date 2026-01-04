@@ -90,6 +90,36 @@ app.post("/sign-in", (req, res) => {
 });
 
 // =====================
+// 📦 SAVE PRODUCT ROUTE
+// =====================
+app.post("/save-product", (req, res) => {
+  console.log("💾 /save-product called with body:", req.body);
+
+  const { phone, product } = req.body;
+  if (!phone || !product) {
+    console.log("❌ Missing phone or product");
+    return res.status(400).json({ success: false });
+  }
+
+  let users = loadUsers();
+  const user = users.find(u => u.phone === phone);
+
+  if (!user) {
+    console.log("❌ User not found:", phone);
+    return res.status(404).json({ success: false, message: "User not found" });
+  }
+
+  if (!user.savedProducts) user.savedProducts = [];
+  if (!user.savedProducts.includes(product)) user.savedProducts.push(product);
+
+  saveUsers(users);
+
+  console.log("✅ Product saved for user:", phone, product);
+  res.json({ success: true, user });
+});
+
+
+// =====================
 // 📦 API ROUTES
 // =====================
 
@@ -98,12 +128,10 @@ app.get("/", (req, res) =>
   res.sendFile(path.join(__dirname, "index.html"))
 );
 
-// ---------- CLARIFAI FOOD DETECTION (FIXED) ----------
+// ---------- CLARIFAI FOOD DETECTION ----------
 app.post("/detect-food", upload.single("image"), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No image uploaded" });
-    }
+    if (!req.file) return res.status(400).json({ error: "No image uploaded" });
 
     const base64Image = req.file.buffer.toString("base64");
 
@@ -116,17 +144,8 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          user_app_id: {
-            user_id: USER_ID,
-            app_id: APP_ID
-          },
-          inputs: [
-            {
-              data: {
-                image: { base64: base64Image }
-              }
-            }
-          ]
+          user_app_id: { user_id: USER_ID, app_id: APP_ID },
+          inputs: [{ data: { image: { base64: base64Image } } }]
         })
       }
     );
@@ -144,10 +163,7 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
       return res.status(400).json({ error: "No food detected" });
     }
 
-    res.json({
-      food: concepts[0].name,
-      confidence: concepts[0].value
-    });
+    res.json({ food: concepts[0].name, confidence: concepts[0].value });
   } catch (err) {
     console.error("Detect food error:", err);
     res.status(500).json({ error: "Server error" });
@@ -157,12 +173,9 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
 // =====================
 // ⏰ REMINDERS
 // =====================
-
 app.get("/get-reminders", (req, res) => {
   const phone = req.query.phone;
-  if (!phone) return res.json({ reminders: [] });
-
-  if (!fs.existsSync(remindersPath)) return res.json({ reminders: [] });
+  if (!phone || !fs.existsSync(remindersPath)) return res.json({ reminders: [] });
 
   const reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
   res.json({ reminders: reminders.filter(r => r.phone === phone) });
@@ -173,16 +186,9 @@ app.post("/add-reminder", async (req, res) => {
   if (!phone || !product || !expiresOn) return res.json({ success: false });
 
   let reminders = [];
-  if (fs.existsSync(remindersPath)) {
-    reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
-  }
+  if (fs.existsSync(remindersPath)) reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
 
-  reminders.push({
-    phone,
-    product: product.trim(),
-    expiresOn,
-    remindBeforeDays: parseInt(remindBeforeDays) || 0
-  });
+  reminders.push({ phone, product: product.trim(), expiresOn, remindBeforeDays: parseInt(remindBeforeDays) || 0 });
 
   fs.writeFileSync(remindersPath, JSON.stringify(reminders, null, 2));
   await sendExpirationSMS(phone, product, expiresOn);
@@ -192,67 +198,70 @@ app.post("/add-reminder", async (req, res) => {
 
 app.post("/delete-reminder", (req, res) => {
   const { phone, product, expiresOn } = req.body;
-  if (!phone || !product || !expiresOn) return res.json({ success: false });
-
-  if (!fs.existsSync(remindersPath)) return res.json({ success: false });
+  if (!phone || !product || !expiresOn || !fs.existsSync(remindersPath)) return res.json({ success: false });
 
   let reminders = JSON.parse(fs.readFileSync(remindersPath, "utf8"));
   const before = reminders.length;
 
-  reminders = reminders.filter(
-    r => !(r.phone === phone && r.product === product && r.expiresOn === expiresOn)
-  );
-
+  reminders = reminders.filter(r => !(r.phone === phone && r.product === product && r.expiresOn === expiresOn));
   fs.writeFileSync(remindersPath, JSON.stringify(reminders, null, 2));
+
   res.json({ success: reminders.length < before });
 });
 
 // ---------- USDA RECALL CHECK ----------
 app.get("/check-recalls", async (req, res) => {
   const food = req.query.food;
-  if (!food) {
-    return res.status(400).json({ error: "Missing food query" });
-  }
+  if (!food) return res.status(400).json({ error: "Missing food query" });
 
-  const USDA_URL =
-    "https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English";
+  const USDA_URL = "https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English";
 
+  // 1. Create a timeout controller (8 seconds)
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000);
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
-    const response = await fetch(USDA_URL, { signal: controller.signal });
-    clearTimeout(timeout);
+    const response = await fetch(USDA_URL, {
+      signal: controller.signal, // This is how you do a timeout in modern Node
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'application/json'
+      }
+    });
 
-    if (!response.ok) {
-      throw new Error(`USDA HTTP ${response.status}`);
-    }
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`USDA HTTP ${response.status}`);
 
     const data = await response.json();
-    const recalls = data.recall || [];
+    const recallsArray = Array.isArray(data) ? data : [];
 
-    const matches = recalls.filter(item => {
+    const matches = recallsArray.filter(item => {
       const text = [
         item.field_title,
+        item.field_establishment,
         item.field_product_items,
-        item.field_summary
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+        item.field_summary,
+        item.field_labels
+      ].filter(Boolean).join(" ").toLowerCase();
 
       return text.includes(food.toLowerCase());
     });
 
     res.json({ recalls: matches });
+
   } catch (err) {
-    clearTimeout(timeout);
+    clearTimeout(timeoutId);
     console.error("USDA fetch failed:", err.message);
+    
+    // Check if the error was a timeout
+    const errorMessage = err.name === 'AbortError' 
+      ? "Request timed out. The USDA server is responding too slowly." 
+      : "USDA recall database is temporarily unavailable.";
 
     res.json({
       warning: true,
-      message:
-        "USDA recall database is temporarily unavailable. Please try again later.",
+      message: errorMessage,
       recalls: []
     });
   }
@@ -268,6 +277,4 @@ app.get("/:page", (req, res) => {
 });
 
 // ---------- START SERVER ----------
-app.listen(PORT, () =>
-  console.log(`✅ Server running at http://localhost:${PORT}`)
-);
+app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
