@@ -1,9 +1,12 @@
 {
+  "version": 2,
   "rewrites": [
-    { "source": "/detect-food", "destination": "/api/index.js" },
-    { "source": "/check-recalls", "destination": "/api/index.js" },
-    { "source": "/save-product", "destination": "/api/index.js" },
-    { "source": "/sign-up", "destination": "/api/index.js" },
-    { "source": "/sign-in", "destination": "/api/index.js" }
+    { "source": "/detect-food", "destination": "/api/index.cjs" },
+    { "source": "/check-recalls", "destination": "/api/index.cjs" },
+    { "source": "/save-product", "destination": "/api/index.cjs" },
+    { "source": "/sign-up", "destination": "/api/index.cjs" },
+    { "source": "/sign-in", "destination": "/api/index.cjs" },
+    { "source": "/get-reminders", "destination": "/api/index.cjs" },
+    { "source": "/add-reminder", "destination": "/api/index.cjs" }
   ]
 }
