@@ -1,3 +1,4 @@
+const fetch = require('node-fetch');
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
@@ -115,7 +116,8 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
         method: "POST",
         headers: {
           Authorization: `Key ${CLARIFAI_API_KEY}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "User-Agent": "VercelServerlessFunction" // Add this line
         },
         body: JSON.stringify({
           user_app_id: { user_id: "clarifai", app_id: "main" },
