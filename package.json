@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/krishmaster27/Recall-API-Project#readme",
   "dependencies": {
+    "@vercel/kv": "^3.0.0",
     "express": "^5.2.1",
     "multer": "^2.0.2",
     "twilio": "^5.11.1"

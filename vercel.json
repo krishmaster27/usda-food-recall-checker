@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/detect-food", "destination": "/api/index.js" },
+    { "source": "/check-recalls", "destination": "/api/index.js" },
+    { "source": "/save-product", "destination": "/api/index.js" },
+    { "source": "/sign-up", "destination": "/api/index.js" },
+    { "source": "/sign-in", "destination": "/api/index.js" }
+  ]
+}
