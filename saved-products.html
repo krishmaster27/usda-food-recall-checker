@@ -8,7 +8,6 @@
 </head>
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
     <h2>Menu</h2>
     <a href="index.html">Home</a>
@@ -19,102 +18,115 @@
     <a href="expiration-reminders.html">Expiration Reminders</a>
 </div>
 
-<!-- Page content -->
 <div class="main-content">
   <h1>Saved Products</h1>
 
   <ul id="productList">
-    <li>
-      <div class="product-row">
-        <span>Apple</span>
-        <div class="buttons">
-          <button class="show-btn" onclick="toggleRecalls(this)">Show Recalls</button>
-          <button class="delete-btn" onclick="deleteProduct(this)">Delete</button>
-        </div>
-      </div>
-      <div class="recalls" style="display:none;">
-        <ul>
-          <li>
-            <strong>DATE:</strong> January 1 2026<br>
-            <strong>PRODUCT:</strong> Fresh Pak, Michigan, and Aunt Mid's Packaged Apple Slices<br>
-            <strong>REASON:</strong> Recalled due to possible listeria contamination.
-          </li>
-          <li>
-            <strong>DATE:</strong> September 24 2024<br>
-            <strong>PRODUCT:</strong> Great Value 100% Apple Juice (8 oz six-packs and other sizes) sold at Walmart.<br>
-            <strong>REASON:</strong> Recalled due to elevated levels of inorganic arsenic above FDA guidance levels.
-          </li>
-          <li>
-            <strong>DATE:</strong> August 26 2024<br>
-            <strong>PRODUCT:</strong> Various 100% apple juice brands (Nature's Nectar, Nice!, Wellsley Farms, Urban Meadow, Clover Valley, Weis, Market Basket, Solevita)<br>
-            <strong>REASON:</strong> Elevated inorganic arsenic levels slightly above FDA guidance.
-          </li>
-        </ul>
-      </div>
-    </li>
-
-    <li>
-      <div class="product-row">
-        <span>Ham</span>
-        <div class="buttons">
-          <button class="show-btn" onclick="toggleRecalls(this)">Show Recalls</button>
-          <button class="delete-btn" onclick="deleteProduct(this)">Delete</button>
-        </div>
-      </div>
-      <div class="recalls" style="display:none;">
-        <ul>
-          <li>
-            <strong>DATE:</strong> January 2 2026<br>
-            <strong>PRODUCT:</strong> Various 16-oz sliced ham products including 4x4 Sliced Ham, Champagne Ham Sliced, and Provincial Ham Sliced.<br>
-            <strong>REASON:</strong> Recalled due to possible salmonella contamination.
-          </li>
-          <li>
-            <strong>DATE:</strong> July 27 2025<br>
-            <strong>PRODUCT:</strong> Reser's Fine Foods Ham Salad (12-oz plastic tubs) and Molly's Kitchen Ham Salad<br>
-            <strong>REASON:</strong> Recalled due to possible Listeria monocytogenes contamination.
-          </li>
-          <li>
-            <strong>DATE:</strong> July 30 2024<br>
-            <strong>PRODUCT:</strong> Ready-to-eat deli meats including ham products (varieties produced at Boar's Head plant in Jarratt, VA).<br>
-            <strong>REASON:</strong> Recalled due to contamination risk with Listeria monocytogenes.
-          </li>
-        </ul>
-      </div>
-    </li>
+    <p id="loadingMsg">Loading your saved products...</p>
   </ul>
 </div>
 
 <script>
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
   // --- Redirect if not logged in ---
   const user = JSON.parse(localStorage.getItem("loggedInUser"));
   if (!user) {
     alert("Please sign in to view saved products.");
     window.location.href = "sign-in.html";
-    return; // stop executing the rest
+    return;
   }
 
-  // --- Product buttons ---
-  window.toggleRecalls = function(button) {
-    const recallsDiv = button.closest("li").querySelector(".recalls");
+  const listEl = document.getElementById("productList");
+
+  // --- Load Products from Server ---
+  async function loadProducts() {
+    try {
+      const response = await fetch(`/get-user-products?phone=${user.phone}`);
+      const data = await response.json();
+      
+      listEl.innerHTML = ""; // This clears the "Loading..." message safely
+
+      if (!data.products || data.products.length === 0) {
+        listEl.innerHTML = "<p style='text-align:center;'>No saved products found. Scan items from the Home page to see them here!</p>";
+        return;
+      }
+
+      data.products.forEach(p => {
+        const li = document.createElement("li");
+        li.style.listStyle = "none";
+        li.innerHTML = `
+          <div class="product-row">
+            <span>${p.product}</span>
+            <div class="buttons">
+              <button class="show-btn" onclick="toggleRecalls(this)">Show Recalls</button>
+              <button class="delete-btn" onclick="deleteProduct(this, '${p.product}')">Delete</button>
+            </div>
+          </div>
+          <div class="recalls" style="display:none;">
+            <p>Searching USDA database...</p>
+          </div>
+        `;
+        listEl.appendChild(li);
+      });
+    } catch (err) {
+      console.error(err);
+      listEl.innerHTML = "<p>Error loading products from server.</p>";
+    }
+  }
+
+  // --- Toggle Recalls ---
+  window.toggleRecalls = async function(button) {
+    const li = button.closest("li");
+    const productName = li.querySelector("span").textContent;
+    const recallsDiv = li.querySelector(".recalls");
+
     if (recallsDiv.style.display === "block") {
       recallsDiv.style.display = "none";
       button.textContent = "Show Recalls";
     } else {
       recallsDiv.style.display = "block";
       button.textContent = "Hide Recalls";
+
+      const recRes = await fetch(`/check-recalls?food=${encodeURIComponent(productName)}`);
+      const recData = await recRes.json();
+      
+      if (recData.recalls && recData.recalls.length > 0) {
+        recallsDiv.innerHTML = "<ul>" + recData.recalls.map(r => `
+          <li style="margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:5px;">
+            <strong>DATE:</strong> ${r.field_recall_date}<br>
+            <strong>TITLE:</strong> ${r.field_title}<br>
+            <strong>REASON:</strong> ${r.field_recall_reason || "Listeria/Salmonella risk - see USDA summary"}
+          </li>
+        `).join("") + "</ul>";
+      } else {
+        recallsDiv.innerHTML = "<p>✅ No active recalls found for this item.</p>";
+      }
     }
   }
 
-  window.deleteProduct = function(button) {
-    const listItem = button.closest("li");
-    listItem.remove();
+  // --- Delete Product ---
+  window.deleteProduct = async function(button, productName) {
+    if (confirm(`Delete ${productName}?`)) {
+      const res = await fetch('/delete-product', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ phone: user.phone, product: productName })
+      });
+      if (res.ok) {
+        button.closest("li").remove();
+        // If the last item was deleted, show the "No products" message
+        if (listEl.children.length === 0) {
+            listEl.innerHTML = "<p style='text-align:center;'>No saved products found.</p>";
+        }
+      }
+    }
   }
 
-  // --- Sidebar animation + hamburger ---
+  loadProducts();
+
+  // --- Sidebar Logic ---
   const sidebar = document.querySelector('.sidebar');
   const content = document.querySelector('.main-content');
-
   setTimeout(() => {
     sidebar.classList.add('active');
     content.classList.add('shifted');
@@ -122,17 +134,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   const toggleBtn = document.createElement('button');
   toggleBtn.innerHTML = '&#9776;';
-  toggleBtn.style.position = 'fixed';
-  toggleBtn.style.top = '7px';
-  toggleBtn.style.left = '-9px';
-  toggleBtn.style.fontSize = '24px';
-  toggleBtn.style.background = '#0074D9';
-  toggleBtn.style.color = 'white';
-  toggleBtn.style.border = 'none';
-  toggleBtn.style.borderRadius = '6px';
-  toggleBtn.style.padding = '10px 14px';
-  toggleBtn.style.cursor = 'pointer';
-  toggleBtn.style.zIndex = '1100';
+  toggleBtn.style.cssText = "position:fixed; top:7px; left:-9px; font-size:24px; background:#0074D9; color:white; border:none; border-radius:6px; padding:10px 14px; cursor:pointer; z-index:1100;";
   document.body.appendChild(toggleBtn);
 
   toggleBtn.addEventListener('click', () => {
