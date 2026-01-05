@@ -22,7 +22,12 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // ---------- KV STORAGE HELPERS ----------
 async function loadUsers() {
-  return (await kv.get("users")) || [];
+  try {
+    return (await kv.get("users")) || [];
+  } catch (e) {
+    console.error("KV Load Error:", e);
+    return [];
+  }
 }
 
 async function saveUsers(users) {
@@ -30,7 +35,12 @@ async function saveUsers(users) {
 }
 
 async function loadReminders() {
-  return (await kv.get("reminders")) || [];
+  try {
+    return (await kv.get("reminders")) || [];
+  } catch (e) {
+    console.error("KV Load Error:", e);
+    return [];
+  }
 }
 
 async function saveReminders(reminders) {
@@ -54,7 +64,7 @@ async function sendExpirationSMS(phone, product, expiresOn) {
 // 🔐 AUTH ROUTES
 // =====================
 
-app.post("/api/sign-up", async (req, res) => {
+app.post(["/api/sign-up", "/sign-up"], async (req, res) => {
   const { phone, password } = req.body;
   if (!phone || !password) return res.status(400).json({ success: false });
 
@@ -70,7 +80,7 @@ app.post("/api/sign-up", async (req, res) => {
   res.json({ success: true, user: newUser });
 });
 
-app.post("/api/sign-in", async (req, res) => {
+app.post(["/api/sign-in", "/sign-in"], async (req, res) => {
   const { phone, password } = req.body;
   const users = await loadUsers();
   const user = users.find(u => u.phone === phone && u.password === password);
@@ -82,7 +92,7 @@ app.post("/api/sign-in", async (req, res) => {
 // =====================
 // 📦 SAVE PRODUCT
 // =====================
-app.post("/api/save-product", async (req, res) => {
+app.post(["/api/save-product", "/save-product"], async (req, res) => {
   const { phone, product } = req.body;
   if (!phone || !product) return res.status(400).json({ success: false });
 
@@ -103,7 +113,7 @@ app.post("/api/save-product", async (req, res) => {
 // =====================
 // 📸 CLARIFAI DETECTION
 // =====================
-app.post("/api/detect-food", upload.single("image"), async (req, res) => {
+app.post(["/api/detect-food", "/detect-food"], upload.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No image" });
 
@@ -136,12 +146,12 @@ app.post("/api/detect-food", upload.single("image"), async (req, res) => {
 // =====================
 // ⏰ REMINDERS
 // =====================
-app.get("/api/get-reminders", async (req, res) => {
+app.get(["/api/get-reminders", "/get-reminders"], async (req, res) => {
   const reminders = await loadReminders();
   res.json({ reminders: reminders.filter(r => r.phone === req.query.phone) });
 });
 
-app.post("/api/add-reminder", async (req, res) => {
+app.post(["/api/add-reminder", "/add-reminder"], async (req, res) => {
   const { phone, product, expiresOn, remindBeforeDays } = req.body;
   let reminders = await loadReminders();
   
@@ -155,7 +165,7 @@ app.post("/api/add-reminder", async (req, res) => {
 // =====================
 // 🔍 USDA RECALLS
 // =====================
-app.get("/api/check-recalls", async (req, res) => {
+app.get(["/api/check-recalls", "/check-recalls"], async (req, res) => {
   const food = req.query.food;
   const USDA_URL = "https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English";
 
