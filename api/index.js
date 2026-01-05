@@ -89,14 +89,35 @@ router.post("/sign-in", async (req, res) => {
 });
 
 router.post("/save-product", async (req, res) => {
-  let users = await loadUsers();
-  const idx = users.findIndex(u => u.phone === req.body.phone);
-  if (idx !== -1) {
-    users[idx].savedProducts = users[idx].savedProducts || [];
-    if (!users[idx].savedProducts.includes(req.body.product)) users[idx].savedProducts.push(req.body.product);
-    await saveUsers(users);
+  try {
+    const { phone, product } = req.body;
+    let users = await loadUsers(); // This uses your try-catch helper
+    const idx = users.findIndex(u => u.phone === phone);
+
+    if (idx !== -1) {
+      users[idx].savedProducts = users[idx].savedProducts || [];
+      if (!users[idx].savedProducts.includes(product)) {
+        users[idx].savedProducts.push(product);
+        
+        // --- THE FIX IS HERE ---
+        const saveSuccessful = await saveUsers(users); 
+        
+        if (!saveSuccessful) {
+          // If KV failed, we still tell the frontend so it can move on
+          return res.status(500).json({ 
+            success: false, 
+            message: "Database save failed, but searching recalls anyway..." 
+          });
+        }
+      }
+    }
+    // If everything worked
+    res.json({ success: true });
+  } catch (err) {
+    // Catch-all for any other weird errors
+    console.error("Route Error:", err);
+    res.status(500).json({ success: false, error: "Server Error" });
   }
-  res.json({ success: true });
 });
 
 // --- THE MAGIC: MOUNT THE ROUTER TWICE ---
