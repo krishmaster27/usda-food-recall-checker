@@ -74,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData();
       formData.append("image", imageUpload.files[0]);
 
-      // PATH MATCHES THE ROUTE IN api/index.cjs
+      // 1. Detect Food
       const detectResponse = await fetch("/api/detect-food", {
         method: "POST",
         body: formData
@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const food = detectData.food;
       const confidence = (detectData.confidence * 100).toFixed(1);
 
+      // Update UI with Detection Results
       resultDiv.innerHTML = `
         <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px solid #d0e7ff; margin-bottom: 20px; text-align: left;">
           <p style="margin-top:0"><strong>AI detected:</strong> ${food} (${confidence}%)</p>
@@ -103,25 +104,12 @@ document.addEventListener("DOMContentLoaded", () => {
         performRecallSearch(newKeyword);
       });
 
-      // ---------- SAVE PRODUCT FOR LOGGED-IN USER ----------
-      // const user = JSON.parse(localStorage.getItem("loggedInUser"));
-      // if (user) {
-      //   // PATH MATCHES THE ROUTE IN api/index.cjs
-      //   await fetch("/api/save-product", {
-      //     method: "POST",
-      //     headers: { "Content-Type": "application/json" },
-      //     body: JSON.stringify({ phone: user.phone, product: food })
-      //   });
-      //   const event = new CustomEvent("addProduct", { detail: { product: food } });
-      //   window.dispatchEvent(event);
-      // }
-
-      // ---------- INITIAL SEARCH ----------
+      // 2. Trigger USDA Search immediately (The "User Save" block is removed from here)
       performRecallSearch(food);
 
     } catch (err) {
       console.error(err);
-      resultDiv.textContent = "An unexpected error occurred. Please try again.";
+      resultDiv.textContent = "An error occurred during detection.";
     }
   });
 });
