@@ -20,8 +20,24 @@ const twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
 const upload = multer({ storage: multer.memoryStorage() });
 
 // --- KV STORAGE HELPERS ---
-async function loadUsers() { return (await kv.get("users")) || []; }
-async function saveUsers(users) { await kv.set("users", users); }
+async function loadUsers() { 
+  try {
+    return (await kv.get("users")) || []; 
+  } catch (err) {
+    console.error("KV Error:", err);
+    return []; // Return empty array so the rest of the app doesn't hang
+  }
+}
+async function saveUsers(users) {
+  try {
+    await kv.set("users", users);
+  } catch (err) {
+    console.error("KV Save Error:", err);
+    // You could throw the error here to be caught by the route handler,
+    // or return false to let the route know the save failed.
+    throw err; 
+  }
+}
 
 // ==========================================
 // 🚀 UNIVERSAL ROUTES (No /api prefix needed here)
