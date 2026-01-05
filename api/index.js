@@ -22,20 +22,21 @@ const upload = multer({ storage: multer.memoryStorage() });
 // --- KV STORAGE HELPERS ---
 async function loadUsers() { 
   try {
-    return (await kv.get("users")) || []; 
+    const users = await kv.get("users");
+    return users || []; 
   } catch (err) {
-    console.error("KV Error:", err);
-    return []; // Return empty array so the rest of the app doesn't hang
+    console.error("KV Load Error:", err);
+    return []; // App continues with an empty list instead of hanging
   }
 }
+
 async function saveUsers(users) {
   try {
     await kv.set("users", users);
+    return true; // Success signal
   } catch (err) {
     console.error("KV Save Error:", err);
-    // You could throw the error here to be caught by the route handler,
-    // or return false to let the route know the save failed.
-    throw err; 
+    return false; // Failure signal - DOES NOT crash the server
   }
 }
 
