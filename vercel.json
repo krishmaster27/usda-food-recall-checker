@@ -5,5 +5,10 @@
       "source": "/api/(.*)",
       "destination": "/api/index.cjs"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.cjs": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
