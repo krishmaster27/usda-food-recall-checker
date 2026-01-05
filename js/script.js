@@ -25,8 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
     resultsContainer.innerHTML = "<p>Searching USDA recalls...</p>";
 
     try {
-      // UPDATED PATH FOR VERCEL
-      const recallResponse = await fetch(`/api/index.cjs/check-recalls?food=${encodeURIComponent(foodKeyword)}`);
+      // PATH MATCHES THE ROUTE IN api/index.cjs
+      const recallResponse = await fetch(`/api/check-recalls?food=${encodeURIComponent(foodKeyword)}`);
       const recallData = await recallResponse.json();
 
       if (recallData.warning) {
@@ -74,8 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData();
       formData.append("image", imageUpload.files[0]);
 
-      // UPDATED PATH FOR VERCEL
-      const detectResponse = await fetch("/api/index.cjs/detect-food", {
+      // PATH MATCHES THE ROUTE IN api/index.cjs
+      const detectResponse = await fetch("/api/detect-food", {
         method: "POST",
         body: formData
       });
@@ -106,8 +106,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // ---------- SAVE PRODUCT FOR LOGGED-IN USER ----------
       const user = JSON.parse(localStorage.getItem("loggedInUser"));
       if (user) {
-        // UPDATED PATH FOR VERCEL
-        await fetch("/api/index.cjs/save-product", {
+        // PATH MATCHES THE ROUTE IN api/index.cjs
+        await fetch("/api/save-product", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: user.phone, product: food })

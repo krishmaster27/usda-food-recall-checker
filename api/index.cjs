@@ -11,9 +11,6 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Note: On Vercel, static files are served automatically from the root.
-// We only need the API logic here.
-
 // ---------- CONFIG ----------
 const CLARIFAI_API_KEY = process.env.CLARIFAI_API_KEY || "3322dba4bf694fd99b8065d57fba6494";
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || "ACc8e2e10c293ca9f29c9475aeb47f2bf8";
@@ -57,7 +54,7 @@ async function sendExpirationSMS(phone, product, expiresOn) {
 // 🔐 AUTH ROUTES
 // =====================
 
-app.post("/sign-up", async (req, res) => {
+app.post("/api/sign-up", async (req, res) => {
   const { phone, password } = req.body;
   if (!phone || !password) return res.status(400).json({ success: false });
 
@@ -73,7 +70,7 @@ app.post("/sign-up", async (req, res) => {
   res.json({ success: true, user: newUser });
 });
 
-app.post("/sign-in", async (req, res) => {
+app.post("/api/sign-in", async (req, res) => {
   const { phone, password } = req.body;
   const users = await loadUsers();
   const user = users.find(u => u.phone === phone && u.password === password);
@@ -85,7 +82,7 @@ app.post("/sign-in", async (req, res) => {
 // =====================
 // 📦 SAVE PRODUCT
 // =====================
-app.post("/save-product", async (req, res) => {
+app.post("/api/save-product", async (req, res) => {
   const { phone, product } = req.body;
   if (!phone || !product) return res.status(400).json({ success: false });
 
@@ -106,7 +103,7 @@ app.post("/save-product", async (req, res) => {
 // =====================
 // 📸 CLARIFAI DETECTION
 // =====================
-app.post("/detect-food", upload.single("image"), async (req, res) => {
+app.post("/api/detect-food", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No image" });
 
@@ -117,7 +114,7 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
         headers: {
           Authorization: `Key ${CLARIFAI_API_KEY}`,
           "Content-Type": "application/json",
-          "User-Agent": "VercelServerlessFunction" // Add this line
+          "User-Agent": "VercelServerlessFunction"
         },
         body: JSON.stringify({
           user_app_id: { user_id: "clarifai", app_id: "main" },
@@ -139,12 +136,12 @@ app.post("/detect-food", upload.single("image"), async (req, res) => {
 // =====================
 // ⏰ REMINDERS
 // =====================
-app.get("/get-reminders", async (req, res) => {
+app.get("/api/get-reminders", async (req, res) => {
   const reminders = await loadReminders();
   res.json({ reminders: reminders.filter(r => r.phone === req.query.phone) });
 });
 
-app.post("/add-reminder", async (req, res) => {
+app.post("/api/add-reminder", async (req, res) => {
   const { phone, product, expiresOn, remindBeforeDays } = req.body;
   let reminders = await loadReminders();
   
@@ -158,7 +155,7 @@ app.post("/add-reminder", async (req, res) => {
 // =====================
 // 🔍 USDA RECALLS
 // =====================
-app.get("/check-recalls", async (req, res) => {
+app.get("/api/check-recalls", async (req, res) => {
   const food = req.query.food;
   const USDA_URL = "https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English";
 
