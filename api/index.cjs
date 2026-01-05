@@ -5,9 +5,12 @@ const twilio = require("twilio");
 const { kv } = require("@vercel/kv");
 
 const app = express();
+const router = express.Router(); // Create the Universal Router
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// --- CONFIG ---
 const CLARIFAI_API_KEY = process.env.CLARIFAI_API_KEY || "3322dba4bf694fd99b8065d57fba6494";
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID || "ACc8e2e10c293ca9f29c9475aeb47f2bf8";
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN || "fe4ec513924d31307945305c31bdb5fd";
@@ -19,21 +22,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 // --- KV STORAGE HELPERS ---
 async function loadUsers() { return (await kv.get("users")) || []; }
 async function saveUsers(users) { await kv.set("users", users); }
-async function loadReminders() { return (await kv.get("reminders")) || []; }
-async function saveReminders(reminders) { await kv.set("reminders", reminders); }
-
-// --- SMS ---
-async function sendExpirationSMS(phone, product, expiresOn) {
-  try { await twilioClient.messages.create({ body: `Reminder: ${product} expires on ${expiresOn}.`, from: TWILIO_PHONE_NUMBER, to: phone }); } 
-  catch (err) { console.error("Twilio Error:", err); }
-}
 
 // ==========================================
-// 🚀 THE FIX: CATCH-ALL ROUTING
+// 🚀 UNIVERSAL ROUTES (No /api prefix needed here)
 // ==========================================
+
+// Health Check (To see if the server is even responding)
+router.get("/health", (req, res) => res.send("Server is running"));
 
 // 1. Detect Food
-app.post(["/api/detect-food", "/detect-food"], upload.single("image"), async (req, res) => {
+router.post("/detect-food", upload.single("image"), async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ error: "No image" });
     const response = await fetch(`https://api.clarifai.com/v2/models/food-item-recognition/versions/1d5fd481e0cf4826aa72ec3ff049e044/outputs`, {
@@ -49,7 +47,7 @@ app.post(["/api/detect-food", "/detect-food"], upload.single("image"), async (re
 });
 
 // 2. Check Recalls
-app.get(["/api/check-recalls", "/check-recalls"], async (req, res) => {
+router.get("/check-recalls", async (req, res) => {
   try {
     const response = await fetch("https://www.fsis.usda.gov/fsis/api/recall/v/1?field_closed_year_id=All&langcode=English");
     const data = await response.json();
@@ -58,8 +56,8 @@ app.get(["/api/check-recalls", "/check-recalls"], async (req, res) => {
   } catch (err) { res.json({ warning: true, recalls: [] }); }
 });
 
-// 3. Auth & Save (Repeat the pattern for others)
-app.post(["/api/sign-up", "/sign-up"], async (req, res) => {
+// 3. Auth
+router.post("/sign-up", async (req, res) => {
   let users = await loadUsers();
   if (users.some(u => u.phone === req.body.phone)) return res.json({ success: false });
   users.push({ ...req.body, savedProducts: [] });
@@ -67,13 +65,13 @@ app.post(["/api/sign-up", "/sign-up"], async (req, res) => {
   res.json({ success: true });
 });
 
-app.post(["/api/sign-in", "/sign-in"], async (req, res) => {
+router.post("/sign-in", async (req, res) => {
   const users = await loadUsers();
   const user = users.find(u => u.phone === req.body.phone && u.password === req.body.password);
-  res.json({ success: user ? true : false, user });
+  res.json({ success: !!user, user });
 });
 
-app.post(["/api/save-product", "/save-product"], async (req, res) => {
+router.post("/save-product", async (req, res) => {
   let users = await loadUsers();
   const idx = users.findIndex(u => u.phone === req.body.phone);
   if (idx !== -1) {
@@ -83,5 +81,9 @@ app.post(["/api/save-product", "/save-product"], async (req, res) => {
   }
   res.json({ success: true });
 });
+
+// --- THE MAGIC: MOUNT THE ROUTER TWICE ---
+app.use("/api", router); // Handles /api/detect-food
+app.use("/", router);    // Handles /detect-food (post-rewrite)
 
 module.exports = app;
