@@ -13,9 +13,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- NEW REUSABLE SEARCH FUNCTION ---
+  // --- REUSABLE SEARCH FUNCTION ---
   async function performRecallSearch(foodKeyword) {
-    // Create a sub-container for results so we don't overwrite the edit box
     let resultsContainer = document.getElementById("resultsContainer");
     if (!resultsContainer) {
       resultsContainer = document.createElement("div");
@@ -26,7 +25,8 @@ document.addEventListener("DOMContentLoaded", () => {
     resultsContainer.innerHTML = "<p>Searching USDA recalls...</p>";
 
     try {
-      const recallResponse = await fetch(`/check-recalls?food=${encodeURIComponent(foodKeyword)}`);
+      // UPDATED PATH FOR VERCEL
+      const recallResponse = await fetch(`/api/index.cjs/check-recalls?food=${encodeURIComponent(foodKeyword)}`);
       const recallData = await recallResponse.json();
 
       if (recallData.warning) {
@@ -44,7 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         matches.forEach(rec => {
           const li = document.createElement("li");
-          // Applying the "Recall Card" formatting we discussed
           li.innerHTML = `
             <strong>${rec.field_title}</strong><br>
             <strong>Date:</strong> ${rec.field_recall_date || "N/A"}<br>
@@ -75,7 +74,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const formData = new FormData();
       formData.append("image", imageUpload.files[0]);
 
-      const detectResponse = await fetch("/detect-food", {
+      // UPDATED PATH FOR VERCEL
+      const detectResponse = await fetch("/api/index.cjs/detect-food", {
         method: "POST",
         body: formData
       });
@@ -86,7 +86,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const food = detectData.food;
       const confidence = (detectData.confidence * 100).toFixed(1);
 
-      // --- OPTION 1: DISPLAY EDITABLE INPUT ---
       resultDiv.innerHTML = `
         <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px solid #d0e7ff; margin-bottom: 20px; text-align: left;">
           <p style="margin-top:0"><strong>AI detected:</strong> ${food} (${confidence}%)</p>
@@ -99,7 +98,6 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="resultsContainer"></div>
       `;
 
-      // Setup the Update button listener
       document.getElementById("updateSearchBtn").addEventListener("click", () => {
         const newKeyword = document.getElementById("correctedFood").value;
         performRecallSearch(newKeyword);
@@ -108,7 +106,8 @@ document.addEventListener("DOMContentLoaded", () => {
       // ---------- SAVE PRODUCT FOR LOGGED-IN USER ----------
       const user = JSON.parse(localStorage.getItem("loggedInUser"));
       if (user) {
-        await fetch("/save-product", {
+        // UPDATED PATH FOR VERCEL
+        await fetch("/api/index.cjs/save-product", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ phone: user.phone, product: food })
