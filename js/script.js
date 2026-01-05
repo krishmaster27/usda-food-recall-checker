@@ -104,17 +104,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       // ---------- SAVE PRODUCT FOR LOGGED-IN USER ----------
-      const user = JSON.parse(localStorage.getItem("loggedInUser"));
-      if (user) {
-        // PATH MATCHES THE ROUTE IN api/index.cjs
-        await fetch("/api/save-product", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ phone: user.phone, product: food })
-        });
-        const event = new CustomEvent("addProduct", { detail: { product: food } });
-        window.dispatchEvent(event);
-      }
+      // const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      // if (user) {
+      //   // PATH MATCHES THE ROUTE IN api/index.cjs
+      //   await fetch("/api/save-product", {
+      //     method: "POST",
+      //     headers: { "Content-Type": "application/json" },
+      //     body: JSON.stringify({ phone: user.phone, product: food })
+      //   });
+      //   const event = new CustomEvent("addProduct", { detail: { product: food } });
+      //   window.dispatchEvent(event);
+      // }
 
       // ---------- INITIAL SEARCH ----------
       performRecallSearch(food);

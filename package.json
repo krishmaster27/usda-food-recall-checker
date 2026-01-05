@@ -1,28 +1,10 @@
 {
-  "name": "recall-api-project",
+  "name": "food-recall-checker",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.cjs",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/krishmaster27/Recall-API-Project.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/krishmaster27/Recall-API-Project/issues"
-  },
-  "homepage": "https://github.com/krishmaster27/Recall-API-Project#readme",
+  "main": "api/index.js",
   "dependencies": {
-    "@vercel/kv": "^3.0.0",
-    "express": "^5.2.1",
-    "multer": "^2.0.2",
-    "node-fetch": "^2.7.0",
-    "twilio": "^5.11.1"
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "node-fetch": "^2.7.0"
   }
 }
