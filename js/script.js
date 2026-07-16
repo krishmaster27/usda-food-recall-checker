@@ -13,8 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- REUSABLE SEARCH FUNCTION ---
+  // --- NEW REUSABLE SEARCH FUNCTION ---
   async function performRecallSearch(foodKeyword) {
+    // Create a sub-container for results so we don't overwrite the edit box
     let resultsContainer = document.getElementById("resultsContainer");
     if (!resultsContainer) {
       resultsContainer = document.createElement("div");
@@ -25,8 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     resultsContainer.innerHTML = "<p>Searching USDA recalls...</p>";
 
     try {
-      // PATH MATCHES THE ROUTE IN api/index.cjs
-      const recallResponse = await fetch(`/api/check-recalls?food=${encodeURIComponent(foodKeyword)}`);
+      const recallResponse = await fetch(`/check-recalls?food=${encodeURIComponent(foodKeyword)}`);
       const recallData = await recallResponse.json();
 
       if (recallData.warning) {
@@ -44,6 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         matches.forEach(rec => {
           const li = document.createElement("li");
+          // Applying the "Recall Card" formatting we discussed
           li.innerHTML = `
             <strong>${rec.field_title}</strong><br>
             <strong>Date:</strong> ${rec.field_recall_date || "N/A"}<br>
@@ -71,22 +72,30 @@ document.addEventListener("DOMContentLoaded", () => {
     resultDiv.textContent = "Analyzing image…";
 
     try {
+      const file = imageUpload.files[0];
       const formData = new FormData();
-      formData.append("image", imageUpload.files[0]);
+      formData.append("image", file);
 
-      // 1. Detect Food
-      const detectResponse = await fetch("/api/detect-food", {
+      const detectResponse = await fetch("/detect-food", {
         method: "POST",
         body: formData
       });
 
-      if (!detectResponse.ok) throw new Error("Food detection failed");
+      if (!detectResponse.ok) {
+        const errData = await detectResponse.json();
+        // If model is still loading, show a friendly message
+        if (errData.error && errData.error.includes("loading")) {
+          resultDiv.textContent = "AI model is warming up, please wait a few seconds and try again.";
+          return;
+        }
+        throw new Error(errData.error || "Food detection failed");
+      }
 
       const detectData = await detectResponse.json();
       const food = detectData.food;
       const confidence = (detectData.confidence * 100).toFixed(1);
 
-      // Update UI with Detection Results
+      // --- DISPLAY EDITABLE INPUT ---
       resultDiv.innerHTML = `
         <div style="background: #f0f7ff; padding: 15px; border-radius: 8px; border: 1px solid #d0e7ff; margin-bottom: 20px; text-align: left;">
           <p style="margin-top:0"><strong>AI detected:</strong> ${food} (${confidence}%)</p>
@@ -99,17 +108,30 @@ document.addEventListener("DOMContentLoaded", () => {
         <div id="resultsContainer"></div>
       `;
 
+      // Setup the Update button listener
       document.getElementById("updateSearchBtn").addEventListener("click", () => {
         const newKeyword = document.getElementById("correctedFood").value;
         performRecallSearch(newKeyword);
       });
 
-      // 2. Trigger USDA Search immediately (The "User Save" block is removed from here)
+      // ---------- SAVE PRODUCT FOR LOGGED-IN USER ----------
+      const user = JSON.parse(localStorage.getItem("loggedInUser"));
+      if (user) {
+        await fetch("/save-product", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: user.phone, product: food })
+        });
+        const event = new CustomEvent("addProduct", { detail: { product: food } });
+        window.dispatchEvent(event);
+      }
+
+      // ---------- INITIAL SEARCH ----------
       performRecallSearch(food);
 
     } catch (err) {
       console.error(err);
-      resultDiv.textContent = "An error occurred during detection.";
+      resultDiv.textContent = err.message || "An unexpected error occurred. Please try again.";
     }
   });
 });
