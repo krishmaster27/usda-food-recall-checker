@@ -6,8 +6,8 @@
   <link rel="stylesheet" href="sidebar.css">
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
+      font-family: "Courier New", Courier, monospace;
+      background: #ffffff;
       margin: 0;
       height: 100%;
     }
@@ -44,7 +44,7 @@
     }
 
     button:hover {
-      background-color: #005fa3;
+      background-color: #173d58;
     }
 
     img {
@@ -98,7 +98,7 @@
 <!-- Main content -->
 <div class="main-content">
   <div class="card">
-    <h1>USDA Food Recall Checker</h1>
+    <h1 id = "usda-title">USDA Food Recall Checker</h1>
     <p>Upload a food image and see if it has been recalled.</p>
     <input type="file" id="imageUpload" name="image" accept="image/*"><br>
     <button id="checkBtn">Check For Recalls</button>
